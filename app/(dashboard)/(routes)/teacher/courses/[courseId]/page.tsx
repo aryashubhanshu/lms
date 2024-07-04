@@ -3,8 +3,8 @@ import React from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { db } from "../../../../../../lib/db";
-import { IconBadge } from "../../../../../../components/IconBadge";
+import { db } from "@/lib/db";
+import { IconBadge } from "@/components/IconBadge";
 import { LayoutDashboard } from "lucide-react";
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
