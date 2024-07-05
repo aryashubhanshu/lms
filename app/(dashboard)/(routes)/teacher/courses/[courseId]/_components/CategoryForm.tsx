@@ -1,9 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import * as z from "zod";
 import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { Course } from "@prisma/client";
+
+import toast from "react-hot-toast";
+import { Pencil } from "lucide-react";
+
 import {
   Form,
   FormControl,
@@ -11,19 +19,18 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
-import { useState } from "react";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+
 import { cn } from "@/lib/utils";
-import { Course } from "@prisma/client";
+import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 
 interface CategoryFormProps {
   initialData: Course;
   courseId: string;
-  options: { label: string; value: string }[];
+  options: {
+    label: string;
+    value: string;
+  }[];
 }
 
 const formSchema = z.object({
@@ -35,12 +42,11 @@ const CategoryForm = ({
   courseId,
   options,
 }: CategoryFormProps) => {
-  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
-  const toggleEdit = () => {
-    setIsEditing((prev) => !prev);
-  };
+  const toggleEdit = () => setIsEditing((current) => !current);
+
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,8 +63,8 @@ const CategoryForm = ({
       toast.success("Course updated");
       toggleEdit();
       router.refresh();
-    } catch {
-      toast.error("Something went wrong!");
+    } catch (error) {
+      toast.error("Something went wrong");
     }
   };
 
@@ -70,7 +76,7 @@ const CategoryForm = ({
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
         Course category
-        <Button onClick={toggleEdit} variant={"ghost"}>
+        <Button onClick={toggleEdit} variant="ghost">
           {isEditing ? (
             <>Cancel</>
           ) : (
@@ -103,14 +109,14 @@ const CategoryForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Combobox {...field} options={...options} />
+                    <Combobox options={...options} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="flex items-center gap-x-2">
-              <Button type="submit" disabled={isSubmitting || !isValid}>
+              <Button disabled={!isValid || isSubmitting} type="submit">
                 Save
               </Button>
             </div>
