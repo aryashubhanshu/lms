@@ -2,6 +2,14 @@ import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+import Mux from "@mux/mux-node";
+import { Video } from "lucide-react";
+
+const { video } = new Mux({
+  tokenId: process.env.MUX_TOKEN_ID,
+  tokenSecret: process.env.MUX_TOKEN_SECRET,
+});
+
 export async function PATCH(
   req: Request,
   { params }: { params: { courseId: string; chapterId: string[] } }
@@ -35,7 +43,37 @@ export async function PATCH(
       },
     });
 
-    // TODO: Handle Video Upload
+    // Handle Video Upload
+    if (values.videoUrl) {
+      const exisitngMuxData = await db.muxData.findFirst({
+        where: {
+          chapterId: String(params.chapterId),
+        },
+      });
+
+      if (exisitngMuxData) {
+        await video.assets.delete(exisitngMuxData.assetId);
+        await db.muxData.delete({
+          where: {
+            id: exisitngMuxData.id,
+          },
+        });
+      }
+
+      const asset = await video.assets.create({
+        input: values.videoUrl,
+        playback_policy: ["public"],
+        test: false,
+      });
+
+      await db.muxData.create({
+        data: {
+          chapterId: String(params.chapterId),
+          assetId: asset.id,
+          playbackId: asset.playback_ids?.[0]?.id,
+        },
+      });
+    }
 
     return NextResponse.json(chapter);
   } catch (error) {
